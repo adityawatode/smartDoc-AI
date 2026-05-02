@@ -15,7 +15,8 @@ app.use("/api/auth", (await import("./routes/authRoutes.js")).default);
 app.use("/api/documents", (await import("./routes/documentRoutes.js")).default);
 app.use("/api/query", (await import("./routes/queryRoutes.js")).default);
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
