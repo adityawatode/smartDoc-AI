@@ -1,4 +1,4 @@
-import askAI from "../services/aiservice.js";
+import askAI from "../services/aiService.js";
 
 export async function askQuestion(req, res) {
   try {
