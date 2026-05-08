@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const aiUrl = process.env.AI_MICROSERVICE_URL || "http://localhost:8000";
+
 const askAI = async (question) => {
-  const response = await axios.post("http://localhost:8000/ask", {
+  const response = await axios.post(`${aiUrl}/ask`, {
     question
   });
 
