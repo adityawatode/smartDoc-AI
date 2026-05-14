@@ -15,9 +15,6 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o755 });
 }
 
-// Connect to DB but don't wait for it - let server start anyway
-connectDB().catch(err => console.error("DB Connection Error:", err));
-
 const app = express();
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -33,7 +30,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -62,7 +59,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server due to database connection error.", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
 

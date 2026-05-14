@@ -1,9 +1,12 @@
 import mongoose from "mongoose"
 
+import dns from "node:dns/promises";
+dns.setServers(["1.1.1.1", "1.0.0.1"]); 
+
+
 const connectDB = async () => {
     if (!process.env.MONGO_URI) {
-        console.error("ERROR: MONGO_URI is not defined in .env");
-        process.exit(1);
+        throw new Error("MONGO_URI is not defined in environment variables");
     }
 
     try {
@@ -21,7 +24,7 @@ const connectDB = async () => {
                 "MongoDB connection failed. Confirm your Atlas cluster allows your current IP address, or add 0.0.0.0/0 for development."
             );
         }
-        process.exit(1);
+        throw error;
     }
 }
 
