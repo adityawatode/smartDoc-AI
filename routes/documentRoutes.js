@@ -2,7 +2,6 @@ import { Router } from "express";
 const router = Router();
 import multer, { diskStorage } from "multer";
 import { uploadDocument, getDocuments } from "../controllers/documentController.js";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
 
 const storage = diskStorage({
   destination: "./uploads/",
@@ -13,7 +12,28 @@ const storage = diskStorage({
 
 const upload = multer({ storage });
 
-router.get("/", authMiddleware, getDocuments);
-router.post("/upload", authMiddleware, upload.single("file"), uploadDocument);
+const uploadMiddleware = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+
+    if (!req.file && Array.isArray(req.files) && req.files.length > 0) {
+      req.file = req.files[0];
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded. Use multipart/form-data with a file field."
+      });
+    }
+
+    next();
+  });
+};
+
+router.get("/", getDocuments);
+router.post("/upload", uploadMiddleware, uploadDocument);
 
 export default router;

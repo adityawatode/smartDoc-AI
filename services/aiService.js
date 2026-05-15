@@ -1,13 +1,15 @@
 import axios from "axios";
 
-const aiUrl = process.env.AI_MICROSERVICE_URL || "http://localhost:8000";
+const getAIUrl = () => process.env.AI_MICROSERVICE_URL || "http://127.0.0.1:8000";
 
 const askAI = async (question) => {
-  const response = await axios.post(`${aiUrl}/ask`, {
-    question
+  const aiUrl = getAIUrl();
+
+  const response = await axios.post(`${aiUrl}/query`, {
+    query: question
   });
 
-  return response.data.answer ?? response.data;
+  return response.data.ans ?? response.data.answer ?? response.data;
 };
 
 export default askAI;

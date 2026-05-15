@@ -1,14 +1,11 @@
+import "dotenv/config";
 import fs from "fs";
 import path from "path";
 import express from "express";
 import cors from "cors";
-import { config } from "dotenv";
 import connectDB from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
-
-config();
 
 const uploadsDir = path.resolve("uploads");
 if (!fs.existsSync(uploadsDir)) {
@@ -40,6 +37,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(uploadsDir));
 
 const PORT = process.env.PORT || 5000;
 
@@ -48,7 +46,6 @@ app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-app.use("/api/auth", authRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/query", queryRoutes);
 
@@ -62,7 +59,7 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({
     success: false,
-    
+
     message: err.message || "Internal Server Error"
   });
 });

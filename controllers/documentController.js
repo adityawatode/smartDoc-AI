@@ -3,6 +3,8 @@ import processPDF from "../services/pythonService.js";
 
 export async function uploadDocument(req, res) {
   try {
+
+    // Check if file exists
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -10,35 +12,69 @@ export async function uploadDocument(req, res) {
       });
     }
 
+    // Get title and uploadedBy
+    const title =
+      req.body.title?.trim() ||
+      req.file.originalname ||
+      "Untitled Document";
+
+    const uploadedBy =
+      req.body.uploadedBy?.trim() ||
+      "anonymous";
+
+    // Create document
     const newDoc = new Document({
-      title: req.body.title,
-      uploadedBy: req.user?.id || req.body.uploadedBy,
+      title,
+      uploadedBy,
       fileName: req.file.filename
     });
 
+    // Save in MongoDB
     await newDoc.save();
 
-    await processPDF(req.file.path);
+    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${encodeURIComponent(req.file.filename)}`;
 
-    res.json({
+    // Process PDF
+    await processPDF(req.file.path, fileUrl);
+
+    // Success response
+    return res.status(200).json({
       success: true,
-      message: "Document uploaded and processed",
+      message: "Document uploaded and processed successfully",
       data: newDoc
     });
 
   } catch (error) {
-    res.status(500).json({
+
+    console.error("Upload Error:", error);
+
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: error.message
+      message: error.message || "Internal Server Error"
     });
   }
 }
 
+// Get all documents
 export async function getDocuments(req, res) {
   try {
-    const documents = await Document.find().sort({ createdAt: -1 });
-    res.json({ success: true, data: documents });
+
+    const documents = await Document.find()
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: documents.length,
+      data: documents
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+
+    console.error("Fetch Documents Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error"
+    });
   }
 }
