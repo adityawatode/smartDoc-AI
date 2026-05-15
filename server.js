@@ -18,19 +18,27 @@ if (!fs.existsSync(uploadsDir)) {
 const app = express();
 
 const isProduction = process.env.NODE_ENV === "production";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://noticeai-frontend-1.onrender.com";
+const allowedOrigins = isProduction
+  ? [FRONTEND_URL]
+  : [FRONTEND_URL, "http://localhost:3000", "http://localhost:5173"];
+
 const corsOptions = {
-  origin: isProduction
-    ? "https://noticeai-frontend-1.onrender.com"
-    : [
-        "https://noticeai-frontend-1.onrender.com",
-        "http://localhost:3000",
-        "http://localhost:5173"
-      ],
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy does not allow access from origin ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+  exposedHeaders: ["Content-Type", "Authorization"]
 };
 
 app.use(cors(corsOptions));
-app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
