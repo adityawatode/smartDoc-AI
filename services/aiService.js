@@ -7,7 +7,11 @@ const askAI = async (question) => {
     question
   });
 
+<<<<<<< HEAD
   return response.data.answer ?? response.data;
+=======
+  return response.data;
+>>>>>>> 19a7afb44ac6c861223453c03033db06a142d84e
 };
 
 export default askAI;

@@ -58,6 +58,7 @@ app.use((req, res) => {
 });
 
 // Global error handler
+<<<<<<< HEAD
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({
@@ -65,6 +66,15 @@ app.use((err, req, res, next) => {
     message: err.message || "Internal Server Error"
   });
 });
+=======
+// app.use((err, req, res, next) => {
+//   console.error(err);
+//   res.status(err.status || 500).json({
+//     success: false,
+//     message: err.message || "Internal Server Error"
+//   });
+// });
+>>>>>>> 19a7afb44ac6c861223453c03033db06a142d84e
 
 const startServer = async () => {
   try {

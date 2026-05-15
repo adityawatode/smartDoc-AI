@@ -11,7 +11,11 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
+<<<<<<< HEAD
     "start": "nodemon server.js"
+=======
+    "start": "node server.js"
+>>>>>>> 19a7afb44ac6c861223453c03033db06a142d84e
   },
   "dependencies": {
     "axios": "^1.14.0",
@@ -22,7 +26,11 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1",
+<<<<<<< HEAD
     "multer": "^2.1.1",
     "nodemon": "^3.1.14"
+=======
+    "multer": "^2.1.1"
+>>>>>>> 19a7afb44ac6c861223453c03033db06a142d84e
   }
 }
