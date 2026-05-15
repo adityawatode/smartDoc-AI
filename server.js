@@ -21,7 +21,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://noticeai-frontend-1.onrender.com";
 const allowedOrigins = isProduction
   ? [FRONTEND_URL]
-  : [FRONTEND_URL, "http://localhost:3000", "http://localhost:5173"];
+  : [FRONTEND_URL, "http://localhost:5173"];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -45,7 +45,7 @@ app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 5000;
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
@@ -59,18 +59,18 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || "Internal Server Error"
-  });
-});
+// app.use((err, req, res, next) => {
+//   console.error(err);
+//   res.status(err.status || 500).json({
+//     success: false,
+//     message: err.message || "Internal Server Error"
+//   });
+// });
 
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, "0.0.0.0", () => {
+    app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
