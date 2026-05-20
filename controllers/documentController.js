@@ -1,4 +1,6 @@
 import { Document } from "../models/Document.js";
+import fs from "node:fs/promises";
+import cloudinary, { assertCloudinaryConfig } from "../config/cloudinary.js";
 import processPDF from "../services/pythonService.js";
 
 export async function uploadDocument(req, res) {
@@ -22,20 +24,31 @@ export async function uploadDocument(req, res) {
       req.body.uploadedBy?.trim() ||
       "anonymous";
 
+    assertCloudinaryConfig();
+
+    const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
+      folder: process.env.CLOUDINARY_DOCUMENT_FOLDER || "smartdoc-ai/documents",
+      resource_type: "raw",
+      use_filename: true,
+      unique_filename: true
+    });
+
     // Create document
     const newDoc = new Document({
       title,
       uploadedBy,
-      fileName: req.file.filename
+      fileName: req.file.originalname,
+      fileUrl: uploadedFile.secure_url,
+      cloudinaryPublicId: uploadedFile.public_id
     });
 
     // Save in MongoDB
     await newDoc.save();
 
-    const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${encodeURIComponent(req.file.filename)}`;
-
     // Process PDF
-    await processPDF(req.file.path, fileUrl);
+    await processPDF(req.file.path, uploadedFile.secure_url);
+
+    await fs.unlink(req.file.path).catch(() => {});
 
     // Success response
     return res.status(200).json({
@@ -45,6 +58,9 @@ export async function uploadDocument(req, res) {
     });
 
   } catch (error) {
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(() => {});
+    }
 
     console.error("Upload Error:", error);
 
