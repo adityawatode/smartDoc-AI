@@ -49,11 +49,17 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/documents", documentRoutes);
+app.use("/api/document", documentRoutes);
 app.use("/api/query", queryRoutes);
 
 // 404 handler for unmatched routes
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: "Route not found" });
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.originalUrl,
+    method: req.method
+  });
 });
 
 // Global error handler

@@ -35,6 +35,8 @@ const uploadMiddleware = (req, res, next) => {
 };
 
 router.get("/", getDocuments);
+router.get("/list", getDocuments);
 router.post("/upload", protect, uploadMiddleware, uploadDocument);
+router.post("/", protect, uploadMiddleware, uploadDocument);
 
 export default router;
