@@ -51,19 +51,17 @@ const createAdminToken = () => jwt.sign(
 );
 
 const serializeUser = (user) => ({
-  id: user._id,
+  id: user._id.toString(),
   username: user.username,
   email: user.email,
-  role: "user",
-  isSuspended: Boolean(user.isSuspended)
+  role: "user"
 });
 
 const serializeAdmin = () => ({
   id: ADMIN_USER.id,
   username: ADMIN_USER.username,
   email: ADMIN_USER.email,
-  role: ADMIN_USER.role,
-  isSuspended: false
+  role: ADMIN_USER.role
 });
 
 const handleAuthError = (res, error) => {
@@ -163,7 +161,7 @@ export async function login(req, res) {
     }
 
     // Find user
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("_id username email isSuspended +password");
     if (!user) {
       return res.status(400).json({
         success: false,
