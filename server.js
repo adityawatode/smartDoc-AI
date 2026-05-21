@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import { getUploadedDocument } from "./controllers/documentController.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
 
@@ -39,6 +40,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(uploadsDir));
+app.get("/uploads/:fileName", getUploadedDocument);
 
 const PORT = process.env.PORT || 5000;
 

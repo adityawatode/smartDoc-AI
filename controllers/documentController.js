@@ -3,6 +3,9 @@ import fs from "node:fs/promises";
 import cloudinary, { assertCloudinaryConfig } from "../config/cloudinary.js";
 import processPDF from "../services/pythonService.js";
 
+const getLocalFileUrl = (fileName) => `/uploads/${encodeURIComponent(fileName)}`;
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export async function uploadDocument(req, res) {
   try {
 
@@ -39,7 +42,9 @@ export async function uploadDocument(req, res) {
       title,
       uploadedBy,
       fileName: req.file.originalname,
-      fileUrl: uploadedFile.secure_url,
+      fileUrl: getLocalFileUrl(req.file.filename),
+      localFileName: req.file.filename,
+      cloudinaryUrl: uploadedFile.secure_url,
       cloudinaryPublicId: uploadedFile.public_id
     });
 
@@ -48,8 +53,6 @@ export async function uploadDocument(req, res) {
 
     // Process PDF
     await processPDF(req.file.path, uploadedFile.secure_url);
-
-    await fs.unlink(req.file.path).catch(() => {});
 
     // Success response
     return res.status(200).json({
@@ -93,5 +96,36 @@ export async function getDocuments(req, res) {
       success: false,
       message: error.message || "Internal Server Error"
     });
+  }
+}
+
+export async function getUploadedDocument(req, res, next) {
+  try {
+    const fileName = req.params.fileName;
+    const fileNameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+
+    const document = await Document.findOne({
+      $or: [
+        { localFileName: fileName },
+        { fileName },
+        {
+          cloudinaryPublicId: {
+            $regex: escapeRegex(fileNameWithoutExt),
+            $options: "i"
+          }
+        }
+      ]
+    });
+
+    const remoteUrl = document?.cloudinaryUrl ||
+      (/^https?:\/\//.test(document?.fileUrl || "") ? document.fileUrl : null);
+
+    if (remoteUrl) {
+      return res.redirect(remoteUrl);
+    }
+
+    next();
+  } catch (error) {
+    next(error);
   }
 }
