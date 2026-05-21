@@ -8,6 +8,29 @@ const getLocalFileUrl = (fileName) => `/uploads/${encodeURIComponent(fileName)}`
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const uploadsDir = path.resolve("uploads");
 
+const getBaseUrl = (req) => {
+  const configuredUrl = process.env.BACKEND_URL || process.env.API_BASE_URL;
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  return `${req.protocol}://${req.get("host")}`;
+};
+
+const getPublicFileUrl = (req, fileName) => `${getBaseUrl(req)}${getLocalFileUrl(fileName)}`;
+
+const serializeDocument = (req, document) => {
+  const serialized = document.toObject ? document.toObject() : document;
+
+  if (serialized.localFileName) {
+    serialized.fileUrl = getPublicFileUrl(req, serialized.localFileName);
+  } else if (serialized.fileUrl?.startsWith("/uploads/")) {
+    serialized.fileUrl = `${getBaseUrl(req)}${serialized.fileUrl}`;
+  }
+
+  return serialized;
+};
+
 const getUploadPath = (fileName) => {
   if (!fileName) return null;
 
@@ -80,7 +103,7 @@ export async function uploadDocument(req, res) {
     return res.status(200).json({
       success: true,
       message: "Document uploaded and processed successfully",
-      data: newDoc
+      data: serializeDocument(req, newDoc)
     });
 
   } catch (error) {
@@ -107,7 +130,7 @@ export async function getDocuments(req, res) {
     return res.status(200).json({
       success: true,
       count: documents.length,
-      data: documents
+      data: documents.map((document) => serializeDocument(req, document))
     });
 
   } catch (error) {
@@ -215,7 +238,7 @@ export async function updateDocument(req, res) {
     return res.status(200).json({
       success: true,
       message: "Document updated successfully",
-      data: document
+      data: serializeDocument(req, document)
     });
   } catch (error) {
     if (req.file?.path) {
