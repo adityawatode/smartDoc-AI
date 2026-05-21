@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import { getUploadedDocument } from "./controllers/documentController.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
 
@@ -50,6 +51,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/document", documentRoutes);
 app.use("/api/query", queryRoutes);

@@ -26,12 +26,30 @@ export async function protect(req, res, next) {
     }
 
     const decoded = jwt.verify(token, getJwtSecret());
-    const user = await User.findById(decoded.id).select("_id username email");
+
+    if (decoded.role === "admin") {
+      req.user = {
+        id: decoded.id,
+        username: decoded.username,
+        email: decoded.email,
+        role: "admin"
+      };
+      return next();
+    }
+
+    const user = await User.findById(decoded.id).select("_id username email isSuspended");
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "Invalid authentication token"
+      });
+    }
+
+    if (user.isSuspended) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended"
       });
     }
 
@@ -47,4 +65,15 @@ export async function protect(req, res, next) {
 
     next(error);
   }
+}
+
+export function requireAdmin(req, res, next) {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Admin access required"
+    });
+  }
+
+  next();
 }

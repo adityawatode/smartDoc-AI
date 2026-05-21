@@ -2,6 +2,13 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
 
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const ADMIN_USER = Object.freeze({
+  id: "hardcoded-admin",
+  username: "Admin",
+  email: "admin@smartdoc.ai",
+  password: "Admin@12345",
+  role: "admin"
+});
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET;
@@ -21,8 +28,24 @@ const normalizeAuthInput = ({ username, email, password } = {}) => ({
   password: typeof password === "string" ? password : ""
 });
 
-const createToken = (user) => jwt.sign(
-  { id: user._id.toString(), username: user.username },
+const createUserToken = (user) => jwt.sign(
+  {
+    id: user._id.toString(),
+    username: user.username,
+    email: user.email,
+    role: "user"
+  },
+  getJwtSecret(),
+  { expiresIn: TOKEN_EXPIRES_IN }
+);
+
+const createAdminToken = () => jwt.sign(
+  {
+    id: ADMIN_USER.id,
+    username: ADMIN_USER.username,
+    email: ADMIN_USER.email,
+    role: ADMIN_USER.role
+  },
   getJwtSecret(),
   { expiresIn: TOKEN_EXPIRES_IN }
 );
@@ -30,7 +53,17 @@ const createToken = (user) => jwt.sign(
 const serializeUser = (user) => ({
   id: user._id,
   username: user.username,
-  email: user.email
+  email: user.email,
+  role: "user",
+  isSuspended: Boolean(user.isSuspended)
+});
+
+const serializeAdmin = () => ({
+  id: ADMIN_USER.id,
+  username: ADMIN_USER.username,
+  email: ADMIN_USER.email,
+  role: ADMIN_USER.role,
+  isSuspended: false
 });
 
 const handleAuthError = (res, error) => {
@@ -95,7 +128,7 @@ export async function register(req, res) {
     const user = await User.create({ username, email, password });
 
     // Generate token
-    const token = createToken(user);
+    const token = createUserToken(user);
 
     res.status(201).json({
       success: true,
@@ -120,12 +153,28 @@ export async function login(req, res) {
       });
     }
 
+    if (email === ADMIN_USER.email && password === ADMIN_USER.password) {
+      return res.json({
+        success: true,
+        message: "Admin login successful",
+        token: createAdminToken(),
+        user: serializeAdmin()
+      });
+    }
+
     // Find user
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(400).json({
         success: false,
         message: "Invalid credentials"
+      });
+    }
+
+    if (user.isSuspended) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account has been suspended"
       });
     }
 
@@ -139,7 +188,7 @@ export async function login(req, res) {
     }
 
     // Generate token
-    const token = createToken(user);
+    const token = createUserToken(user);
 
     res.json({
       success: true,
@@ -156,6 +205,6 @@ export async function login(req, res) {
 export async function me(req, res) {
   res.json({
     success: true,
-    user: serializeUser(req.user)
+    user: req.user?.role === "admin" ? req.user : serializeUser(req.user)
   });
 }

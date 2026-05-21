@@ -23,6 +23,14 @@ const UserSchema = new Schema({
     required: true,
     minlength: 8,
     select: false
+  },
+  isSuspended: {
+    type: Boolean,
+    default: false
+  },
+  suspendedAt: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 
