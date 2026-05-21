@@ -2,6 +2,7 @@ import { Router } from "express";
 const router = Router();
 import multer, { diskStorage } from "multer";
 import { uploadDocument, getDocuments } from "../controllers/documentController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const storage = diskStorage({
   destination: "./uploads/",
@@ -34,6 +35,6 @@ const uploadMiddleware = (req, res, next) => {
 };
 
 router.get("/", getDocuments);
-router.post("/upload", uploadMiddleware, uploadDocument);
+router.post("/upload", protect, uploadMiddleware, uploadDocument);
 
 export default router;

@@ -4,6 +4,7 @@ import path from "path";
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import queryRoutes from "./routes/queryRoutes.js";
 
@@ -46,6 +47,7 @@ app.get("/", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/query", queryRoutes);
 

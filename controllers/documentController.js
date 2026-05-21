@@ -21,6 +21,7 @@ export async function uploadDocument(req, res) {
       "Untitled Document";
 
     const uploadedBy =
+      req.user?.username ||
       req.body.uploadedBy?.trim() ||
       "anonymous";
 
